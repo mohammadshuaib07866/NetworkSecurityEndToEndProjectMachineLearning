@@ -32,6 +32,18 @@ MANIFEST
 *.manifest
 *.spec
 
+# Environment variables
+.env
+*.env
+.env.*
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
