@@ -3,7 +3,12 @@ import sys
 from networksecurity.exception.exception import NetworkSecurityException
 from networksecurity.logger.logging import logging
 from networksecurity.components.data_ingestion import DataIngestion
-from networksecurity.entity.config_entity import TrainingPipelineConfig,DataIngestionConfig
+from networksecurity.components.data_validation import DataValidation
+from networksecurity.entity.config_entity import (
+    TrainingPipelineConfig,
+    DataIngestionConfig,
+    DataValidationConfig,
+)
 from networksecurity.entity.artifact_entity import DataIngestionArtifact
 
 
@@ -42,10 +47,28 @@ class TrainingPipeline:
         except Exception as e:
             raise NetworkSecurityException(e, sys.exc_info())
 
+    def start_data_validation(self, data_ingestion_artifact: DataIngestionArtifact):
+        try:
+            data_validation_config = DataValidationConfig(
+                training_pipeline_config=self.training_pipeline_config
+            )
+            data_valiation = DataValidation(
+                data_ingestion_artifact=data_ingestion_artifact,
+                data_validation_config=data_validation_config,
+            )
+            logging.info("Initiate the data validation")
+            data_validation_artifact = data_valiation.initiate_data_validation()
+            return data_validation_artifact
+        except Exception as e:
+            raise NetworkSecurityException(e, sys.exc_info())
+
     def run_pipeline(self):
         try:
             logging.info("Pipeline Execution Started...")
             data_ingestion_artifact = self.start_data_ingestion()
+            data_validation_artifact = self.start_data_validation(
+                data_ingestion_artifact=data_ingestion_artifact
+            )
             logging.info("Pipeline Execution Completed Successfully.")
 
         except Exception as e:
