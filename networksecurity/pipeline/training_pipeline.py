@@ -2,14 +2,23 @@ import os
 import sys
 from networksecurity.exception.exception import NetworkSecurityException
 from networksecurity.logger.logging import logging
+
 from networksecurity.components.data_ingestion import DataIngestion
 from networksecurity.components.data_validation import DataValidation
+from networksecurity.components.data_transformation import DataTransformation
+
 from networksecurity.entity.config_entity import (
     TrainingPipelineConfig,
     DataIngestionConfig,
     DataValidationConfig,
+    DataTransformationConfig
 )
-from networksecurity.entity.artifact_entity import DataIngestionArtifact
+
+from networksecurity.entity.artifact_entity import (
+    DataIngestionArtifact,
+    DataValidationArtifact,
+    DataTransformationArtifact
+)
 
 
 class TrainingPipeline:
@@ -28,6 +37,9 @@ class TrainingPipeline:
         except Exception as e:
             raise NetworkSecurityException(e, sys.exc_info())
 
+    # ----------------------------------------------------
+    # 1. DATA INGESTION
+    # ----------------------------------------------------
     def start_data_ingestion(self) -> DataIngestionArtifact:
         try:
             logging.info("Starting Data Ingestion process...")
@@ -47,28 +59,72 @@ class TrainingPipeline:
         except Exception as e:
             raise NetworkSecurityException(e, sys.exc_info())
 
-    def start_data_validation(self, data_ingestion_artifact: DataIngestionArtifact):
+    # ----------------------------------------------------
+    # 2. DATA VALIDATION
+    # ----------------------------------------------------
+    def start_data_validation(self, data_ingestion_artifact: DataIngestionArtifact) -> DataValidationArtifact:
         try:
             data_validation_config = DataValidationConfig(
                 training_pipeline_config=self.training_pipeline_config
             )
-            data_valiation = DataValidation(
+
+            data_validation = DataValidation(
                 data_ingestion_artifact=data_ingestion_artifact,
                 data_validation_config=data_validation_config,
             )
-            logging.info("Initiate the data validation")
-            data_validation_artifact = data_valiation.initiate_data_validation()
+
+            logging.info("Initiating Data Validation...")
+            data_validation_artifact = data_validation.initiate_data_validation()
+
+            logging.info("Data Validation Completed Successfully.")
             return data_validation_artifact
+
         except Exception as e:
             raise NetworkSecurityException(e, sys.exc_info())
 
+    # ----------------------------------------------------
+    # 3. DATA TRANSFORMATION
+    # ----------------------------------------------------
+    def start_data_transformation(self, data_validation_artifact: DataValidationArtifact) -> DataTransformationArtifact:
+        try:
+            data_transformation_config = DataTransformationConfig(
+                training_pipeline_config=self.training_pipeline_config
+            )
+
+            data_transformation = DataTransformation(
+                data_validation_artifact=data_validation_artifact,
+                data_transformation_config=data_transformation_config
+            )
+
+            logging.info("Initiating Data Transformation...")
+            data_transformation_artifact = data_transformation.initiate_data_transformation()
+
+            logging.info("Data Transformation Completed Successfully.")
+            return data_transformation_artifact
+
+        except Exception as e:
+            raise NetworkSecurityException(e, sys.exc_info())
+
+    # ----------------------------------------------------
+    # 4. RUN PIPELINE
+    # ----------------------------------------------------
     def run_pipeline(self):
         try:
             logging.info("Pipeline Execution Started...")
+
+            # Step 1: Ingestion
             data_ingestion_artifact = self.start_data_ingestion()
+
+            # Step 2: Validation
             data_validation_artifact = self.start_data_validation(
                 data_ingestion_artifact=data_ingestion_artifact
             )
+
+            # Step 3: Transformation
+            data_transformation_artifact = self.start_data_transformation(
+                data_validation_artifact=data_validation_artifact
+            )
+
             logging.info("Pipeline Execution Completed Successfully.")
 
         except Exception as e:
