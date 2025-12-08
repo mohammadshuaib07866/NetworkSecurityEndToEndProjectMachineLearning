@@ -25,6 +25,11 @@ from sklearn.ensemble import (
 )
 
 
+import dagshub
+dagshub.init(repo_owner='mohammadshuaib07866', repo_name='Machine-Learning-End-To-End-Project', mlflow=True)
+
+
+
 class ModelTrainer:
     def __init__(
         self,
@@ -52,15 +57,15 @@ class ModelTrainer:
                 mlflow.log_metric("precision_score", precision_score)
                 mlflow.log_metric("recall", recall_score)
 
-                mlflow.sklearn.log_model(best_model, "model")  # FIXED
+                # mlflow.sklearn.log_model(best_model, "model")  # FIXED
 
-                # Model Registry works only when backend is NOT file-store
-                if tracking_url_type_store != "file":
-                    mlflow.sklearn.log_model(
-                        best_model,
-                        "model",
-                        registered_model_name=best_model_name,
-                    )
+                # # Model Registry works only when backend is NOT file-store
+                # if tracking_url_type_store != "file":
+                #     mlflow.sklearn.log_model(
+                #         best_model,
+                #         "model",
+                #         registered_model_name=best_model_name,
+                #     )
 
         except Exception as e:
             raise NetworkSecurityException(e, sys.exc_info())
@@ -142,6 +147,7 @@ class ModelTrainer:
 
         network_model = NetworkModel(preprocessor=preprocessor, model=best_model)
         save_object(self.model_trainer_config.trained_model_file_path, network_model)
+        save_object("final_model/model.pkl",best_model)
 
         model_trainer_artifact = ModelTrainerArtifact(
             trained_model_file_path=self.model_trainer_config.trained_model_file_path,
